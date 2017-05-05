@@ -16,11 +16,18 @@ class IgnoreResultAction(ResultAction):
 
     @staticmethod
     @enforce_signature
-    def is_applicable(result: Result, original_file_dict, file_diff_dict):
+    def is_applicable(result: Result,
+                      original_file_dict,
+                      file_diff_dict,
+                      applied_actions=[]):
         """
         For being applicable, the result has to point to a number of files
         that have to exist i.e. have not been previously deleted.
+        Additionally, the action should not have been applied to the current
+        result before.
         """
+        if any(isinstance(x, IgnoreResultAction) for x in applied_actions):
+            return False
 
         if len(result.affected_code) == 0:
             return 'The result is not associated with any source code.'

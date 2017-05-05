@@ -9,19 +9,33 @@ from coalib.results.result_actions.IgnoreResultAction import IgnoreResultAction
 class IgnoreResultActionTest(unittest.TestCase):
 
     def test_is_applicable(self):
+        prior_ignore = [IgnoreResultAction()]
+        associated_result = Result.from_values('origin', 'msg',
+                                               "file doesn't exist", 2)
 
         with self.assertRaises(TypeError) as context:
             IgnoreResultAction.is_applicable('str', {}, {})
+        with self.assertRaises(TypeError) as context:
+            IgnoreResultAction.is_applicable('str', {}, {}, prior_ignore)
 
         self.assertEqual(
-            IgnoreResultAction.is_applicable(
-                Result.from_values('origin', 'msg', "file doesn't exist", 2),
-                {},
-                {}
-            ),
+            IgnoreResultAction.is_applicable(associated_result, {}, {}),
             "The result is associated with source code that doesn't "
-            'seem to exist.'
-        )
+            'seem to exist.')
+
+        self.assertFalse(
+            IgnoreResultAction.is_applicable(
+                associated_result,
+                {},
+                {},
+                prior_ignore))
+
+        self.assertFalse(
+            IgnoreResultAction.is_applicable(
+                Result('', ''),
+                {},
+                {},
+                prior_ignore))
 
         self.assertEqual(
             IgnoreResultAction.is_applicable(
@@ -33,8 +47,14 @@ class IgnoreResultActionTest(unittest.TestCase):
         )
 
         with make_temp() as f_a:
-            self.assertTrue(IgnoreResultAction.is_applicable(
-                Result.from_values('origin', 'msg', f_a, 2), {}, {}))
+            result = Result.from_values('origin', 'msg', f_a, 2)
+            self.assertTrue(IgnoreResultAction.is_applicable(result, {}, {}))
+            self.assertFalse(
+                IgnoreResultAction.is_applicable(
+                    result,
+                    {},
+                    {},
+                    prior_ignore))
 
     def test_no_orig(self):
         uut = IgnoreResultAction()

@@ -407,7 +407,7 @@ class ConsoleInteractionTest(unittest.TestCase):
             self.assertIn('TestAction', failed_actions)
 
             action.apply = lambda *args, **kwargs: {}
-            ask_for_action_and_apply(*args)
+            self.assertIsInstance(ask_for_action_and_apply(*args), TestAction)
             self.assertEqual(generator.last_input, 3)
             self.assertNotIn('TestAction', failed_actions)
 

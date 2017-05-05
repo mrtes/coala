@@ -135,32 +135,37 @@ def acquire_actions_and_apply(console_printer,
     """
     cli_actions = CLI_ACTIONS if cli_actions is None else cli_actions
     failed_actions = set()
+    successful_actions = []
+
     while True:
-        actions = []
-        for action in cli_actions:
-            if action.is_applicable(result, file_dict, file_diff_dict) is True:
-                actions.append(action)
-
-        if actions == []:
-            return
-
         action_dict = {}
         metadata_list = []
-        for action in actions:
-            metadata = action.get_metadata()
-            action_dict[metadata.name] = action
-            metadata_list.append(metadata)
+
+        for action in cli_actions:
+            if action.is_applicable(result,
+                                    file_dict,
+                                    file_diff_dict,
+                                    successful_actions) is True:
+                metadata = action.get_metadata()
+                action_dict[metadata.name] = action
+                metadata_list.append(metadata)
+
+        if not metadata_list:
+            return
 
         # User can always choose no action which is guaranteed to succeed
-        if not ask_for_action_and_apply(console_printer,
-                                        section,
-                                        metadata_list,
-                                        action_dict,
-                                        failed_actions,
-                                        result,
-                                        file_diff_dict,
-                                        file_dict):
+        chosen_action = ask_for_action_and_apply(console_printer,
+                                                 section,
+                                                 metadata_list,
+                                                 action_dict,
+                                                 failed_actions,
+                                                 result,
+                                                 file_diff_dict,
+                                                 file_dict)
+        if not chosen_action:
             break
+        else:
+            successful_actions.append(chosen_action)
 
 
 def print_lines(console_printer,
@@ -630,14 +635,13 @@ def ask_for_action_and_apply(console_printer,
                             the file with filename as keys.
     :param file_dict:       Dictionary with filename as keys and its contents
                             as values.
-    :return:                Returns a boolean value. True will be returned, if
-                            it makes sense that the user may choose to execute
-                            another action, False otherwise.
+    :return:                Returns the chosen action or none if
+                            the user chooses to do nothing
     """
     action_name, section = print_actions(console_printer, section,
                                          metadata_list, failed_actions)
-    if action_name is None:
-        return False
+    if not action_name:
+        return None
 
     chosen_action = action_dict[action_name]
     try:
@@ -653,7 +657,8 @@ def ask_for_action_and_apply(console_printer,
         logging.error('Failed to execute the action {} with error: {}.'.format(
             action_name, exception))
         failed_actions.add(action_name)
-    return True
+
+    return chosen_action
 
 
 def show_enumeration(console_printer,
