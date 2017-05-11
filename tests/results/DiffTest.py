@@ -148,12 +148,20 @@ class DiffTest(unittest.TestCase):
         del result_file[2]
         self.assertEqual(self.uut.modified, result_file)
 
-    def test_has_changes(self):
-        self.assertFalse(self.uut.has_changes)
+    def test_bool(self):
+        self.assertFalse(bool(self.uut))
         self.uut.add_line(4, '4')
-        self.assertTrue(self.uut.has_changes)
+        self.assertTrue(bool(self.uut))
         self.uut.delete_line(4)
-        self.assertFalse(self.uut.has_changes)
+        self.assertFalse(bool(self.uut))
+
+        uut = Diff(self.file)
+        self.assertFalse(bool(uut))
+        uut.rename = 'test'
+        self.assertTrue(bool(uut))
+        uut.rename = False
+        uut.delete = True
+        self.assertTrue(bool(uut))
 
     def test_addition(self):
         self.assertRaises(TypeError, self.uut.__add__, 5)
