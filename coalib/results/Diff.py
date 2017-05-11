@@ -417,22 +417,23 @@ class Diff:
 
         return result
 
-    def __bool__(self):
-        """
-        >>> bool(Diff([]))
-        False
-        >>> bool(Diff([], rename="some"))
-        True
-        >>> bool(Diff([], delete=True))
-        True
-        >>> bool(Diff.from_string_arrays(['1'], []))
-        True
+    # def __bool__(self):
+    #     """
+    #     >>> bool(Diff([]))
+    #     False
+    #     >>> bool(Diff([], rename="some"))
+    #     True
+    #     >>> bool(Diff([], delete=True))
+    #     True
+    #     >>> bool(Diff.from_string_arrays(['1'], []))
+    #     True
 
-        :return: False if the patch has no effect at all when applied.
-        """
-        return (self.rename is not False or
-                self.delete is True or
-                self.modified != self._file)
+    #     :return: False if the patch has no effect at all when applied.
+    #     """
+    #     return (self.rename is not False or
+    #             self.delete is True or
+    #             self.modified != self._file or
+    #             len(self._changes) > 0)
 
     def delete_line(self, line_nr):
         """
