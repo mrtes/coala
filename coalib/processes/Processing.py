@@ -382,7 +382,6 @@ def instantiate_processes(section,
     """
     filename_list = collect_files(
         glob_list(section.get('files', '')),
-        None,
         ignored_file_paths=glob_list(section.get('ignore', '')),
         limit_file_paths=glob_list(section.get('limit_files', '')),
         section_name=section.name)

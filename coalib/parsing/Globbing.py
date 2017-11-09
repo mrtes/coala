@@ -196,7 +196,8 @@ def translate(pattern):
 
 def fnmatch(name, globs):
     """
-    Tests whether name matches one of the given globs.
+    Tests whether name matches one of the given globs. An empty glob will
+    match nothing -> return false.
 
     :param name:  File or directory name
     :param globs: Glob string with wildcards or list of globs

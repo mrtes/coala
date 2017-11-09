@@ -3,6 +3,7 @@ import os
 import pkg_resources
 import unittest
 
+from functools import partial
 from pyprint.ConsolePrinter import ConsolePrinter
 
 from testfixtures import LogCapture
@@ -35,7 +36,6 @@ class CollectFilesTest(unittest.TestCase):
         with LogCapture() as capture:
             self.assertEqual(collect_files(file_paths=['invalid_path'],
                                            log_printer=self.log_printer,
-                                           ignored_file_paths=None,
                                            limit_file_paths=None,
                                            section_name='section'), [])
         capture.check(
@@ -86,6 +86,33 @@ class CollectFilesTest(unittest.TestCase):
                                            'file2.py')]),
                          [])
 
+    def test_ignored_dirs(self):
+        def dir_base(*args):
+            return os.path.normcase(os.path.join(self.collectors_test_dir,
+                                                 'others', *args))
+        # dir_base = partial(
+        #     os.path.join, self.collectors_test_dir, 'others')
+        files_to_check = [dir_base('*', '*2.py'),
+                          dir_base('**', '*.pyc'),
+                          dir_base('*', '*1.c')]
+        ignore = dir_base('py_files', '')
+        collect_files_partial = partial(collect_files,
+                                        files_to_check)
+        self.assertEqual(
+            collect_files_partial(ignored_file_paths=[ignore]),
+            [dir_base('c_files', 'file1.c')])
+        self.assertEqual(
+            collect_files_partial(ignored_file_paths=[ignore.rstrip(os.sep)]),
+            [dir_base('c_files', 'file1.c')])
+        self.assertEqual(
+            collect_files_partial(
+                ignored_file_paths=[dir_base('py_files', '**')]),
+            [dir_base('c_files', 'file1.c')])
+        self.assertEqual(
+            collect_files_partial(
+                ignored_file_paths=[dir_base('py_files', '*')]),
+            [dir_base('c_files', 'file1.c')])
+
     def test_limited(self):
         self.assertEqual(
             collect_files([os.path.join(self.collectors_test_dir,
@@ -94,10 +121,10 @@ class CollectFilesTest(unittest.TestCase):
                                         '*py')],
                           self.log_printer,
                           limit_file_paths=[os.path.join(
-                                                self.collectors_test_dir,
-                                                'others',
-                                                '*',
-                                                '*2.py')]),
+                              self.collectors_test_dir,
+                              'others',
+                              '*',
+                              '*2.py')]),
             [os.path.normcase(os.path.join(self.collectors_test_dir,
                                            'others',
                                            'py_files',
@@ -339,7 +366,8 @@ class CollectorsTests(unittest.TestCase):
         self.assertEqual(str(local_bears['test_section'][0]),
                          "<class 'bears2.Test2LocalBear'>")
 
-        global_bears = filter_section_bears_by_languages(global_bears, ['Java'])
+        global_bears = filter_section_bears_by_languages(
+            global_bears, ['Java'])
         self.assertEqual(len(global_bears['test_section']), 1)
         self.assertEqual(str(global_bears['test_section'][0]),
                          "<class 'bears1.Test1GlobalBear'>")
